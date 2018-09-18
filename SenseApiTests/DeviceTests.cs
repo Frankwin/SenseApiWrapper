@@ -1,5 +1,7 @@
+using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace SenseApiTests
@@ -24,9 +26,17 @@ namespace SenseApiTests
         {
             Task.Run(async () =>
             {
-                var result = await SenseApi.GetDeviceDetails(SenseApi.AuthorizationResponse.Monitors.First().Id, "e9c5fdbd");
+                if (SenseApi.DeviceList == null || SenseApi.DeviceList.Count == 0)
+                {
+                    await SenseApi.GetDeviceList(SenseApi.AuthorizationResponse.Monitors.First().Id);
+                }
 
-                Assert.IsTrue(result.Device.Id == "e9c5fdbd");
+                var rnd = new Random();
+                var r = rnd.Next(SenseApi.DeviceList.Count);
+
+                var result = await SenseApi.GetDeviceDetails(SenseApi.AuthorizationResponse.Monitors.First().Id, SenseApi.DeviceList[r].Id);
+
+                Assert.IsTrue(result.Device.Id == SenseApi.DeviceList[r].Id);
 
             }).GetAwaiter().GetResult();
         }

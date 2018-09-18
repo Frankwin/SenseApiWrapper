@@ -97,9 +97,10 @@ namespace SenseApi
                 var device = DeviceList.FirstOrDefault(x => x.Id == deviceId);
                 if (device == null) return deviceDetails;
 
-                DeviceList.Remove(device);
+                var pos = DeviceList.FindIndex(x => x.Id == deviceId);
+                DeviceList.RemoveAt(pos);
                 device = deviceDetails.Device;
-                DeviceList.Add(device);
+                DeviceList.Insert(pos, device);
 
                 return deviceDetails;
             }
