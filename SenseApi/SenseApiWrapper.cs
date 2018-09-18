@@ -1,8 +1,10 @@
 ﻿using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using SenseApi.Models;
 
@@ -13,8 +15,19 @@ namespace SenseApi
         public AuthorizationResponse AuthorizationResponse { get; set; }
         public MonitorStatus MonitorStatus { get; set; }
         public List<Device> DeviceList { get; set; }
+        public static IConfigurationRoot Config { get; private set; }
+        private readonly string apiAddress;
 
-        private const string ApiAddress = "https://api.sense.com/apiservice/api/v1";
+        public SenseApiWrapper()
+        {
+            Config = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json")
+                .Build();
+
+            apiAddress = Config["api-url"];
+        }
+
 
         /// <summary>
         /// Authenticate with the Sense API using your email and password
@@ -37,7 +50,7 @@ namespace SenseApi
                     content.Headers.Clear();
                     content.Headers.Add("Content-Type", "application/x-www-form-urlencoded");
 
-                    var response = await httpClient.PostAsync($"{ApiAddress}/authenticate", content);
+                    var response = await httpClient.PostAsync($"{apiAddress}/authenticate", content);
                     var json = await response.Content.ReadAsStringAsync();
 
                     AuthorizationResponse = JsonConvert.DeserializeObject<AuthorizationResponse>(json);
@@ -57,7 +70,7 @@ namespace SenseApi
             {
                 httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", AuthorizationResponse.AccessToken);
 
-                var response = await httpClient.GetAsync($"{ApiAddress}/app/monitors/{monitorId}/status");
+                var response = await httpClient.GetAsync($"{apiAddress}/app/monitors/{monitorId}/status");
                 var json = await response.Content.ReadAsStringAsync();
 
                 MonitorStatus = JsonConvert.DeserializeObject<MonitorStatus>(json);
@@ -72,7 +85,7 @@ namespace SenseApi
             {
                 httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", AuthorizationResponse.AccessToken);
 
-                var response = await httpClient.GetAsync($"{ApiAddress}/app/monitors/{monitorId}/devices");
+                var response = await httpClient.GetAsync($"{apiAddress}/app/monitors/{monitorId}/devices");
                 var json = await response.Content.ReadAsStringAsync();
 
                 DeviceList = JsonConvert.DeserializeObject<List<Device>>(json);
@@ -87,7 +100,7 @@ namespace SenseApi
             {
                 httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", AuthorizationResponse.AccessToken);
 
-                var response = await httpClient.GetAsync($"{ApiAddress}/app/monitors/{monitorId}/devices/{deviceId}");
+                var response = await httpClient.GetAsync($"{apiAddress}/app/monitors/{monitorId}/devices/{deviceId}");
                 var json = await response.Content.ReadAsStringAsync();
 
                 var deviceDetails = JsonConvert.DeserializeObject<DeviceDetails>(json);
