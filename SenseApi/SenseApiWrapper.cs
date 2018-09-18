@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -6,6 +8,7 @@ using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
+using SenseApi.Enums;
 using SenseApi.Models;
 
 namespace SenseApi
@@ -79,6 +82,11 @@ namespace SenseApi
             }
         }
 
+        /// <summary>
+        /// Get the list of devices that Sense "detected" from the Sense API 
+        /// </summary>
+        /// <param name="monitorId">Monitor ID to get the devices from</param>
+        /// <returns>List of Devices with some details</returns>
         public async Task<List<Device>> GetDeviceList(int monitorId)
         {
             using (var httpClient = new HttpClient())
@@ -94,6 +102,13 @@ namespace SenseApi
             }
         }
 
+        /// <summary>
+        /// Get additional details on a specific device.
+        /// If a DeviceList is present this list is also updated with the additional details.
+        /// </summary>
+        /// <param name="monitorId">Monitor ID that the device is registered on</param>
+        /// <param name="deviceId">Device ID to get additional details for</param>
+        /// <returns>Device Details for the specified device.</returns>
         public async Task<DeviceDetails> GetDeviceDetails(int monitorId, string deviceId)
         {
             using (var httpClient = new HttpClient())
@@ -116,6 +131,55 @@ namespace SenseApi
                 DeviceList.Insert(pos, device);
 
                 return deviceDetails;
+            }
+        }
+
+        /// <summary>
+        /// Get the generic monitor history samples from the Sense monitor
+        /// </summary>
+        /// <param name="monitorId">Monitor ID to get the history sampling from</param>
+        /// <param name="granularity">Granularity to use, valid uses are Second, Minute, Hour and Day</param>
+        /// <param name="startDateTime">Start Date and Time to start the sample retrieval from</param>
+        /// <param name="sampleCount">Number of samples to retrieve.</param>
+        /// <returns>HistoryRecord object with a list sampling values for the monitor in the chosen granularity interval</returns>
+        public async Task<HistoryRecord> GetMonitorHistory(int monitorId, Granularity granularity, DateTime startDateTime, int sampleCount)
+        {
+            using (var httpClient = new HttpClient())
+            {
+                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", AuthorizationResponse.AccessToken);
+
+                var response = await httpClient.GetAsync(
+                    $"{apiAddress}/app/history/usage?monitor_id={monitorId}&granularity={granularity.ToString().ToLowerInvariant()}&start={startDateTime.ToUniversalTime().ToString("yyyy-MM-ddThh:mm:ssZ",CultureInfo.InvariantCulture)}&frames={sampleCount}");
+                var json = await response.Content.ReadAsStringAsync();
+
+                var history = JsonConvert.DeserializeObject<HistoryRecord>(json);
+
+                return history;
+            }
+        }
+
+        /// <summary>
+        /// Get the history samples for a specific device from the Sense monitor
+        /// </summary>
+        /// <param name="monitorId">Monitor ID to get the history sampling from</param>
+        /// <param name="deviceId">Device ID to get the history sampling for</param>
+        /// <param name="granularity">Granularity to use, valid uses are Second, Minute, Hour and Day</param>
+        /// <param name="startDateTime">Start Date and Time to start the sample retrieval from</param>
+        /// <param name="sampleCount">Number of samples to retrieve.</param>
+        /// <returns>HistoryRecord object with a list sampling values for the monitor in the chosen granularity interval</returns>
+        public async Task<HistoryRecord> GetDeviceHistory(int monitorId, string deviceId, Granularity granularity, DateTime startDateTime, int sampleCount)
+        {
+            using (var httpClient = new HttpClient())
+            {
+                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", AuthorizationResponse.AccessToken);
+
+                var response = await httpClient.GetAsync(
+                    $"{apiAddress}/app/history/usage?monitor_id={monitorId}&device_id={deviceId}&granularity={granularity.ToString().ToLowerInvariant()}&start={startDateTime.ToUniversalTime().ToString("yyyy-MM-ddThh:mm:ssZ", CultureInfo.InvariantCulture)}&frames={sampleCount}");
+                var json = await response.Content.ReadAsStringAsync();
+
+                var history = JsonConvert.DeserializeObject<HistoryRecord>(json);
+
+                return history;
             }
         }
     }
