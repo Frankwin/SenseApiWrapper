@@ -95,10 +95,11 @@ namespace SenseApi
                 if (DeviceList == null || DeviceList.Count <= 0) return deviceDetails;
 
                 var device = DeviceList.FirstOrDefault(x => x.Id == deviceId);
-                if (device != null)
-                {
-                    device = deviceDetails.Device;
-                }
+                if (device == null) return deviceDetails;
+
+                DeviceList.Remove(device);
+                device = deviceDetails.Device;
+                DeviceList.Add(device);
 
                 return deviceDetails;
             }

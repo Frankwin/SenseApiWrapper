@@ -29,7 +29,7 @@ namespace SenseApiTests
                 throw new KeyNotFoundException("The email and/or password are not configured in the appsettings.json file.");
             }
 
-            if (Config["accesstoken"] == null)
+            if (Config["accesstoken"] == "")
             {
                 Task.Run(async () =>
                 {

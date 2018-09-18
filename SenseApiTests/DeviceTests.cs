@@ -37,9 +37,9 @@ namespace SenseApiTests
             Task.Run(async () =>
             {
                 await SenseApi.GetDeviceList(SenseApi.AuthorizationResponse.Monitors.First().Id);
-                await SenseApi.GetDeviceDetails(SenseApi.AuthorizationResponse.Monitors.First().Id, SenseApi.DeviceList.First().Id);
+                var deviceDetails = await SenseApi.GetDeviceDetails(SenseApi.AuthorizationResponse.Monitors.First().Id, SenseApi.DeviceList.First().Id);
 
-                Assert.IsTrue(SenseApi.DeviceList.First().LastStateTime != null);
+                Assert.IsTrue(SenseApi.DeviceList.Find(x => x.Id == deviceDetails.Device.Id).LastState != null);
 
             }).GetAwaiter().GetResult();
         }
