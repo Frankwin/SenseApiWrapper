@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.28010.2026
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SenseApi", "SenseApi\SenseApi.csproj", "{2342CADF-D865-4E40-A232-79EDD1649200}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SenseApiTests", "SenseApiTests\SenseApiTests.csproj", "{C42F9583-C0F3-4024-8D0B-CA0E7C461D53}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{2342CADF-D865-4E40-A232-79EDD1649200}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2342CADF-D865-4E40-A232-79EDD1649200}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2342CADF-D865-4E40-A232-79EDD1649200}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2342CADF-D865-4E40-A232-79EDD1649200}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C42F9583-C0F3-4024-8D0B-CA0E7C461D53}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C42F9583-C0F3-4024-8D0B-CA0E7C461D53}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C42F9583-C0F3-4024-8D0B-CA0E7C461D53}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C42F9583-C0F3-4024-8D0B-CA0E7C461D53}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {89FA2F83-F3B7-48CC-8B7A-AC312D451712}
+	EndGlobalSection
+EndGlobal
