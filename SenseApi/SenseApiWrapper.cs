@@ -135,6 +135,72 @@ namespace SenseApi
         }
 
         /// <summary>
+        /// Get additional details for the "Always On" devices
+        /// If a DeviceList is present this list is also updated with the additional details.
+        /// </summary>
+        /// <param name="monitorId">Monitor ID that the device is registered on</param>
+        /// <returns>Device Details for the specified device.</returns>
+        public async Task<DeviceDetails> GetAlwaysOnDetails(int monitorId)
+        {
+            const string deviceId = "always_on";
+
+            using (var httpClient = new HttpClient())
+            {
+                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", AuthorizationResponse.AccessToken);
+
+                var response = await httpClient.GetAsync($"{apiAddress}/app/monitors/{monitorId}/devices/{deviceId}");
+                var json = await response.Content.ReadAsStringAsync();
+
+                var deviceDetails = JsonConvert.DeserializeObject<DeviceDetails>(json);
+
+                if (DeviceList == null || DeviceList.Count <= 0) return deviceDetails;
+
+                var device = DeviceList.FirstOrDefault(x => x.Id == deviceId);
+                if (device == null) return deviceDetails;
+
+                var pos = DeviceList.FindIndex(x => x.Id == deviceId);
+                DeviceList.RemoveAt(pos);
+                device = deviceDetails.Device;
+                DeviceList.Insert(pos, device);
+
+                return deviceDetails;
+            }
+        }
+
+        /// <summary>
+        /// Get additional details for the "Always On" devices
+        /// If a DeviceList is present this list is also updated with the additional details.
+        /// </summary>
+        /// <param name="monitorId">Monitor ID that the device is registered on</param>
+        /// <returns>Device Details for the specified device.</returns>
+        public async Task<DeviceDetails> GetOtherDetails(int monitorId)
+        {
+            const string deviceId = "unknown";
+
+            using (var httpClient = new HttpClient())
+            {
+                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", AuthorizationResponse.AccessToken);
+
+                var response = await httpClient.GetAsync($"{apiAddress}/app/monitors/{monitorId}/devices/{deviceId}");
+                var json = await response.Content.ReadAsStringAsync();
+
+                var deviceDetails = JsonConvert.DeserializeObject<DeviceDetails>(json);
+
+                if (DeviceList == null || DeviceList.Count <= 0) return deviceDetails;
+
+                var device = DeviceList.FirstOrDefault(x => x.Id == deviceId);
+                if (device == null) return deviceDetails;
+
+                var pos = DeviceList.FindIndex(x => x.Id == deviceId);
+                DeviceList.RemoveAt(pos);
+                device = deviceDetails.Device;
+                DeviceList.Insert(pos, device);
+
+                return deviceDetails;
+            }
+        }
+
+        /// <summary>
         /// Get the generic monitor history samples from the Sense monitor
         /// </summary>
         /// <param name="monitorId">Monitor ID to get the history sampling from</param>

@@ -33,6 +33,32 @@ namespace SenseApiTests
         }
 
         [TestMethod]
+        public async Task GetAlwaysOnDetails()
+        {
+            if (SenseApi.DeviceList == null || SenseApi.DeviceList.Count == 0)
+            {
+                await SenseApi.GetDeviceList(SenseApi.AuthorizationResponse.Monitors.First().Id);
+            }
+
+            var result = await SenseApi.GetAlwaysOnDetails(SenseApi.AuthorizationResponse.Monitors.First().Id);
+
+            Assert.IsTrue(result.Device.Id.Contains("always_on", StringComparison.InvariantCultureIgnoreCase));
+        }
+
+        [TestMethod]
+        public async Task GetOtherDetails()
+        {
+            if (SenseApi.DeviceList == null || SenseApi.DeviceList.Count == 0)
+            {
+                await SenseApi.GetDeviceList(SenseApi.AuthorizationResponse.Monitors.First().Id);
+            }
+
+            var result = await SenseApi.GetOtherDetails(SenseApi.AuthorizationResponse.Monitors.First().Id);
+
+            Assert.IsTrue(result.Device.Id.Contains("unknown", StringComparison.InvariantCultureIgnoreCase));
+        }
+
+        [TestMethod]
         public async Task MakeSureDeviceListGetsUpdatedWithDeviceDetailsTest()
         {
                 await SenseApi.GetDeviceList(SenseApi.AuthorizationResponse.Monitors.First().Id);
