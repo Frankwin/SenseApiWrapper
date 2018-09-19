@@ -13,15 +13,10 @@ namespace SenseApiTests
         }
 
         [TestMethod]
-        public void UnsuccessfulAuthenticationTest()
+        public async Task UnsuccessfulAuthenticationTest()
         {
-            Task.Run(async () =>
-            {
                 var result = await SenseApi.Authenticate("bob123456@test.com", "WhatIsGoingOn");
-
                 Assert.IsFalse(result.Authorized);
-
-            }).GetAwaiter().GetResult();
         }
 
         [TestMethod]

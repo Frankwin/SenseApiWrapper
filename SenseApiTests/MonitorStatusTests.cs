@@ -8,15 +8,11 @@ namespace SenseApiTests
     public class MonitorStatusTests : TestBase
     {
         [TestMethod]
-        public void CheckMonitorStatus()
+        public async Task CheckMonitorStatus()
         {
-            Task.Run(async () =>
-            {
-                var result = await SenseApi.GetMonitorStatus(SenseApi.AuthorizationResponse.Monitors.First().Id);
+            var result = await SenseApi.GetMonitorStatus(SenseApi.AuthorizationResponse.Monitors.First().Id);
 
-                Assert.IsTrue(result.MonitorInfo.Serial != null);
-
-            }).GetAwaiter().GetResult();
+            Assert.IsTrue(result.MonitorInfo.Serial != null);
         }
     }
 }

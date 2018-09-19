@@ -9,48 +9,36 @@ namespace SenseApiTests
     public class DeviceTests : TestBase
     {
         [TestMethod]
-        public void GetDeviceListTest()
+        public async Task GetDeviceListTest()
         {
-            Task.Run(async () =>
-            {
-                var result = await SenseApi.GetDeviceList(SenseApi.AuthorizationResponse.Monitors.First().Id);
+            var result = await SenseApi.GetDeviceList(SenseApi.AuthorizationResponse.Monitors.First().Id);
 
-                Assert.IsTrue(result.Count > 0);
-
-            }).GetAwaiter().GetResult();
+            Assert.IsTrue(result.Count > 0);
         }
 
         [TestMethod]
-        public void GetDeviceDetails()
+        public async Task GetDeviceDetails()
         {
-            Task.Run(async () =>
+            if (SenseApi.DeviceList == null || SenseApi.DeviceList.Count == 0)
             {
-                if (SenseApi.DeviceList == null || SenseApi.DeviceList.Count == 0)
-                {
-                    await SenseApi.GetDeviceList(SenseApi.AuthorizationResponse.Monitors.First().Id);
-                }
+                await SenseApi.GetDeviceList(SenseApi.AuthorizationResponse.Monitors.First().Id);
+            }
 
-                var rnd = new Random();
-                var r = rnd.Next(SenseApi.DeviceList.Count);
+            var rnd = new Random();
+            var r = rnd.Next(SenseApi.DeviceList.Count);
 
-                var result = await SenseApi.GetDeviceDetails(SenseApi.AuthorizationResponse.Monitors.First().Id, SenseApi.DeviceList[r].Id);
+            var result = await SenseApi.GetDeviceDetails(SenseApi.AuthorizationResponse.Monitors.First().Id, SenseApi.DeviceList[r].Id);
 
-                Assert.IsTrue(result.Device.Id == SenseApi.DeviceList[r].Id);
-
-            }).GetAwaiter().GetResult();
+            Assert.IsTrue(result.Device.Id == SenseApi.DeviceList[r].Id);
         }
 
         [TestMethod]
-        public void MakeSureDeviceListGetsUpdatedWithDeviceDetailsTest()
+        public async Task MakeSureDeviceListGetsUpdatedWithDeviceDetailsTest()
         {
-            Task.Run(async () =>
-            {
                 await SenseApi.GetDeviceList(SenseApi.AuthorizationResponse.Monitors.First().Id);
                 var deviceDetails = await SenseApi.GetDeviceDetails(SenseApi.AuthorizationResponse.Monitors.First().Id, SenseApi.DeviceList.First().Id);
 
                 Assert.IsTrue(SenseApi.DeviceList.Find(x => x.Id == deviceDetails.Device.Id).LastState != null);
-
-            }).GetAwaiter().GetResult();
         }
     }
 }
