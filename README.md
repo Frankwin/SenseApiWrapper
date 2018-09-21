@@ -10,3 +10,6 @@ If you have any additional information, feel free to contact me.
 This work was based of the work done here: 
 * https://github.com/scottbonline/sense 
 * https://gist.github.com/mbrownnycnyc/db3209a1045746f5e287ea6b6631e19c
+
+The wrapper is now also available as a NuGet Package:
+https://www.nuget.org/packages/SenseApi
