@@ -75,7 +75,7 @@ namespace SenseApi
                     var appSettingsJson = File.ReadAllText("appsettings.json");
                     dynamic jsonObj = JsonConvert.DeserializeObject(appSettingsJson);
                     jsonObj["accesstoken"] = AuthorizationResponse.AccessToken;
-                    jsonObj["monitor-id"] = AuthorizationResponse.Monitors.First().Id;
+                    jsonObj["monitor-ids"] = string.Join(",", AuthorizationResponse.Monitors.Select(x => x.Id));
                     string output =
                         JsonConvert.SerializeObject(jsonObj, Formatting.Indented);
                     File.WriteAllText("appsettings.json", output);
@@ -92,19 +92,17 @@ namespace SenseApi
         /// </summary>
         /// <param name="monitorId">Monitor ID to check</param>
         /// <returns>Monitor Status Object</returns>
-        /// <exception cref="HttpRequestException">Exception thrown if the request was not successfull.</exception>
         public async Task<MonitorStatus> GetMonitorStatus(int monitorId)
         {
             using (var httpClient = new HttpClient())
             {
                 httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", Config["accesstoken"]);
 
-                var response = await httpClient.GetAsync($"{apiAddress}/app/monitors/{monitorId}/status");
+                var callData = $"{apiAddress}/app/monitors/{monitorId}/status";
 
-                if (!response.IsSuccessStatusCode)
-                {
-                    throw new HttpRequestException($"{(int)response.StatusCode} - {response.ReasonPhrase}");
-                }
+                var response = await httpClient.GetAsync(callData);
+
+                await CheckResponseStatus(response, httpClient, callData);
 
                 var json = await response.Content.ReadAsStringAsync();
 
@@ -119,19 +117,17 @@ namespace SenseApi
         /// </summary>
         /// <param name="monitorId">Monitor ID to get the devices from</param>
         /// <returns>List of Devices with some details</returns>
-        /// <exception cref="HttpRequestException">Exception thrown if the request was not successfull.</exception>
         public async Task<List<Device>> GetDeviceList(int monitorId)
         {
             using (var httpClient = new HttpClient())
             {
                 httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", Config["accesstoken"]);
 
-                var response = await httpClient.GetAsync($"{apiAddress}/app/monitors/{monitorId}/devices");
+                var callData = $"{apiAddress}/app/monitors/{monitorId}/devices";
+                
+                var response = await httpClient.GetAsync(callData);
 
-                if (!response.IsSuccessStatusCode)
-                {
-                    throw new HttpRequestException($"{(int)response.StatusCode} - {response.ReasonPhrase}");
-                }
+                await CheckResponseStatus(response, httpClient, callData);
 
                 var json = await response.Content.ReadAsStringAsync();
 
@@ -148,19 +144,17 @@ namespace SenseApi
         /// <param name="monitorId">Monitor ID that the device is registered on</param>
         /// <param name="deviceId">Device ID to get additional details for</param>
         /// <returns>Device Details for the specified device.</returns>
-        /// <exception cref="HttpRequestException">Exception thrown if the request was not successfull.</exception>
         public async Task<DeviceDetails> GetDeviceDetails(int monitorId, string deviceId)
         {
             using (var httpClient = new HttpClient())
             {
                 httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", Config["accesstoken"]);
 
-                var response = await httpClient.GetAsync($"{apiAddress}/app/monitors/{monitorId}/devices/{deviceId}");
+                var callData = $"{apiAddress}/app/monitors/{monitorId}/devices/{deviceId}";
 
-                if (!response.IsSuccessStatusCode)
-                {
-                    throw new HttpRequestException($"{(int)response.StatusCode} - {response.ReasonPhrase}");
-                }
+                var response = await httpClient.GetAsync(callData);
+
+                await CheckResponseStatus(response, httpClient, callData);
 
                 var json = await response.Content.ReadAsStringAsync();
 
@@ -186,7 +180,6 @@ namespace SenseApi
         /// </summary>
         /// <param name="monitorId">Monitor ID that the device is registered on</param>
         /// <returns>Device Details for the specified device.</returns>
-        /// <exception cref="HttpRequestException">Exception thrown if the request was not successfull.</exception>
         public async Task<DeviceDetails> GetAlwaysOnDetails(int monitorId)
         {
             const string deviceId = "always_on";
@@ -195,12 +188,11 @@ namespace SenseApi
             {
                 httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", Config["accesstoken"]);
 
-                var response = await httpClient.GetAsync($"{apiAddress}/app/monitors/{monitorId}/devices/{deviceId}");
+                var callData = $"{apiAddress}/app/monitors/{monitorId}/devices/{deviceId}";
 
-                if (!response.IsSuccessStatusCode)
-                {
-                    throw new HttpRequestException($"{(int)response.StatusCode} - {response.ReasonPhrase}");
-                }
+                var response = await httpClient.GetAsync(callData);
+
+                await CheckResponseStatus(response, httpClient, callData);
 
                 var json = await response.Content.ReadAsStringAsync();
 
@@ -226,7 +218,6 @@ namespace SenseApi
         /// </summary>
         /// <param name="monitorId">Monitor ID that the device is registered on</param>
         /// <returns>Device Details for the specified device.</returns>
-        /// <exception cref="HttpRequestException">Exception thrown if the request was not successfull.</exception>
         public async Task<DeviceDetails> GetOtherDetails(int monitorId)
         {
             const string deviceId = "unknown";
@@ -235,12 +226,11 @@ namespace SenseApi
             {
                 httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", Config["accesstoken"]);
 
-                var response = await httpClient.GetAsync($"{apiAddress}/app/monitors/{monitorId}/devices/{deviceId}");
+                var callData = $"{apiAddress}/app/monitors/{monitorId}/devices/{deviceId}";
 
-                if (!response.IsSuccessStatusCode)
-                {
-                    throw new HttpRequestException($"{(int)response.StatusCode} - {response.ReasonPhrase}");
-                }
+                var response = await httpClient.GetAsync(callData);
+
+                await CheckResponseStatus(response, httpClient, callData);
 
                 var json = await response.Content.ReadAsStringAsync();
 
@@ -268,20 +258,17 @@ namespace SenseApi
         /// <param name="startDateTime">Start Date and Time to start the sample retrieval from</param>
         /// <param name="sampleCount">Number of samples to retrieve.</param>
         /// <returns>HistoryRecord object with a list sampling values for the monitor in the chosen granularity interval</returns>
-        /// <exception cref="HttpRequestException">Exception thrown if the request was not successfull.</exception>
         public async Task<HistoryRecord> GetMonitorHistory(int monitorId, Granularity granularity, DateTime startDateTime, int sampleCount)
         {
             using (var httpClient = new HttpClient())
             {
                 httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", Config["accesstoken"]);
 
-                var response = await httpClient.GetAsync(
-                    $"{apiAddress}/app/history/usage?monitor_id={monitorId}&granularity={granularity.ToString().ToLowerInvariant()}&start={startDateTime.ToUniversalTime().ToString("yyyy-MM-ddThh:mm:ssZ",CultureInfo.InvariantCulture)}&frames={sampleCount}");
+                var callData = $"{apiAddress}/app/history/usage?monitor_id={monitorId}&granularity={granularity.ToString().ToLowerInvariant()}&start={startDateTime.ToUniversalTime().ToString("yyyy-MM-ddThh:mm:ssZ",CultureInfo.InvariantCulture)}&frames={sampleCount}";
 
-                if (!response.IsSuccessStatusCode)
-                {
-                    throw new HttpRequestException($"{(int)response.StatusCode} - {response.ReasonPhrase}");
-                }
+                var response = await httpClient.GetAsync(callData);
+
+                await CheckResponseStatus(response, httpClient, callData);
 
                 var json = await response.Content.ReadAsStringAsync();
 
@@ -300,7 +287,6 @@ namespace SenseApi
         /// <param name="startDateTime">Start Date and Time to start the sample retrieval from</param>
         /// <param name="sampleCount">Number of samples to retrieve.</param>
         /// <returns>HistoryRecord object with a list sampling values for the monitor in the chosen granularity interval</returns>
-        /// <exception cref="HttpRequestException">Exception thrown if the request was not successfull.</exception>
         public async Task<HistoryRecord> GetDeviceHistory(int monitorId, string deviceId, Granularity granularity, DateTime startDateTime, int sampleCount)
         {
             if (granularity != Granularity.Second && granularity != Granularity.Minute && granularity != Granularity.Hour &&
@@ -313,13 +299,12 @@ namespace SenseApi
             {
                 httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", Config["accesstoken"]);
 
-                var response = await httpClient.GetAsync(
-                    $"{apiAddress}/app/history/usage?monitor_id={monitorId}&device_id={deviceId}&granularity={granularity.ToString().ToLowerInvariant()}&start={startDateTime.ToUniversalTime().ToString("yyyy-MM-ddThh:mm:ssZ", CultureInfo.InvariantCulture)}&frames={sampleCount}");
+                var callData =
+                    $"{apiAddress}/app/history/usage?monitor_id={monitorId}&device_id={deviceId}&granularity={granularity.ToString().ToLowerInvariant()}&start={startDateTime.ToUniversalTime().ToString("yyyy-MM-ddThh:mm:ssZ", CultureInfo.InvariantCulture)}&frames={sampleCount}";
 
-                if (!response.IsSuccessStatusCode)
-                {
-                    throw new HttpRequestException($"{(int)response.StatusCode} - {response.ReasonPhrase}");
-                }
+                var response = await httpClient.GetAsync(callData);
+
+                await CheckResponseStatus(response, httpClient, callData);
 
                 var json = await response.Content.ReadAsStringAsync();
 
@@ -348,12 +333,11 @@ namespace SenseApi
             {
                 httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", Config["accesstoken"]);
 
-                var response = await httpClient.GetAsync($"{apiAddress}/app/history/trends?monitor_id={monitorId}&device_id=usage&scale={granularity.ToString().ToLowerInvariant()}&start={startDateTime.ToUniversalTime().ToString("yyyy-MM-ddThh:mm:ssZ", CultureInfo.InvariantCulture)}");
+                var callData = $"{apiAddress}/app/history/trends?monitor_id={monitorId}&device_id=usage&scale={granularity.ToString().ToLowerInvariant()}&start={startDateTime.ToUniversalTime().ToString("yyyy-MM-ddThh:mm:ssZ", CultureInfo.InvariantCulture)}";
 
-                if (!response.IsSuccessStatusCode)
-                {
-                    throw new HttpRequestException($"{(int)response.StatusCode} - {response.ReasonPhrase}");
-                }
+                var response = await httpClient.GetAsync(callData);
+
+                await CheckResponseStatus(response, httpClient, callData);
 
                 var json = await response.Content.ReadAsStringAsync();
 
@@ -362,5 +346,37 @@ namespace SenseApi
                 return trendData;
             }
         }
+
+        #region Private methods
+
+        /// <summary>
+        /// Check the response status of the Http Call and if we get an Unauthorized response try
+        /// to Authenticate again and then retry the call
+        /// </summary>
+        /// <param name="response">Response to check the status for</param>
+        /// <param name="httpClient">HttpClient object to use to retry the call</param>
+        /// <param name="callData">Call Data to retry</param>
+        /// <exception cref="HttpRequestException">Exception thrown if the request was not successfull.</exception>
+        private async Task CheckResponseStatus(HttpResponseMessage response, HttpClient httpClient, string callData)
+        {
+            if (!response.IsSuccessStatusCode)
+            {
+                if (response.StatusCode != HttpStatusCode.Unauthorized)
+                    throw new HttpRequestException($"{(int)response.StatusCode} - {response.ReasonPhrase}");
+
+                // Try to authenticate and retry the call if we got an Unauthorized Status Code as the token probably has expired
+                await Authenticate(Config["email"], Config["password"]);
+                if (!response.IsSuccessStatusCode)
+                {
+                    throw new HttpRequestException($"{(int)response.StatusCode} - {response.ReasonPhrase}");
+                }
+
+                await httpClient.GetAsync(callData);
+
+                throw new HttpRequestException($"{(int)response.StatusCode} - {response.ReasonPhrase}");
+            }
+        }
+
+        #endregion Private methods
     }
 }

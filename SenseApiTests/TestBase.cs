@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Diagnostics;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.IO;
 using System.Linq;
@@ -14,6 +13,7 @@ namespace SenseApiTests
         protected SenseApiWrapper SenseApi;
         
         public static IConfigurationRoot Config { get; private set; }
+        public int MonitorId { get; set; }
 
         [TestInitialize]
         public async Task TestClassSetup()
@@ -30,15 +30,18 @@ namespace SenseApiTests
                 throw new KeyNotFoundException("The email and/or password are not configured in the appsettings.json file.");
             }
 
-            if (Config["accesstoken"] == "" || Config["monitor-id"] == "")
+            if (Config["accesstoken"] == "" || Config["monitor-ids"] == "")
             {
                 var result = await SenseApi.Authenticate(Config["email"], Config["password"]);
                 if (result.AccessToken != null)
                 {
                     Config["accesstoken"] = result.AccessToken;
-                    Config["monitor-id"] = result.Monitors.First().Id.ToString();
+                    Config["monitor-ids"] = string.Join(",", result.Monitors.Select(x => x.Id));
                 }
             }
+
+            // Just use the first monitor found in all tests.
+            MonitorId = int.Parse(Config["monitor-ids"].Split(",")[0]);
         }
     }
 }
