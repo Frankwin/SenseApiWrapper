@@ -1,3 +1,4 @@
+using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -9,14 +10,14 @@ namespace SenseApiTests
         [TestMethod]
         public void SuccessfulAuthenticationTest()
         {
-                Assert.IsTrue(SenseApi.AuthorizationResponse.Authorized);
+            Assert.IsTrue(SenseApi.AuthorizationResponse.Authorized);
         }
 
         [TestMethod]
+        [ExpectedException(typeof(HttpRequestException))]
         public async Task UnsuccessfulAuthenticationTest()
         {
-                var result = await SenseApi.Authenticate("bob123456@test.com", "WhatIsGoingOn");
-                Assert.IsFalse(result.Authorized);
+                await SenseApi.Authenticate("bob123456@test.com", "WhatIsGoingOn");
         }
 
         [TestMethod]
