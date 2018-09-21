@@ -10,7 +10,7 @@ namespace SenseApiTests
         [TestMethod]
         public async Task CheckMonitorStatus()
         {
-            var result = await SenseApi.GetMonitorStatus(SenseApi.AuthorizationResponse.Monitors.First().Id);
+            var result = await SenseApi.GetMonitorStatus(int.Parse(Config["monitor-id"]));
 
             Assert.IsTrue(result.MonitorInfo.Serial != null);
         }

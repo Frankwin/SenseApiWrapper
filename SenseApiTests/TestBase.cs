@@ -30,15 +30,13 @@ namespace SenseApiTests
                 throw new KeyNotFoundException("The email and/or password are not configured in the appsettings.json file.");
             }
 
-            if (Config["accesstoken"] == "" || SenseApi.AuthorizationResponse == null)
+            if (Config["accesstoken"] == "" || Config["monitor-id"] == "")
             {
                 var result = await SenseApi.Authenticate(Config["email"], Config["password"]);
                 if (result.AccessToken != null)
                 {
                     Config["accesstoken"] = result.AccessToken;
-                    Config.Providers.First().Set("accesstoken", result.AccessToken);
-
-                    Debug.WriteLine(result.AccessToken); // Write to Debug window so it can be manually copy/pasted in appsettings.json for now
+                    Config["monitor-id"] = result.Monitors.First().Id.ToString();
                 }
             }
         }

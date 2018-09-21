@@ -13,7 +13,7 @@ namespace SenseApiTests
         public async Task GetMonitorHistoryInSeconds()
         {
             const int sampleCount = 86400;
-            var result = await SenseApi.GetMonitorHistory(SenseApi.AuthorizationResponse.Monitors.First().Id, Granularity.Second, DateTime.Now.AddDays(-1), sampleCount);
+            var result = await SenseApi.GetMonitorHistory(int.Parse(Config["monitor-id"]), Granularity.Second, DateTime.Now.AddDays(-1), sampleCount);
 
             Assert.IsTrue(result.Totals.Count == sampleCount);
         }
@@ -22,7 +22,7 @@ namespace SenseApiTests
         public async Task GetMonitorHistoryInMinutes()
         {
             const int sampleCount = 1440;
-            var result = await SenseApi.GetMonitorHistory(SenseApi.AuthorizationResponse.Monitors.First().Id, Granularity.Minute, DateTime.Now.AddDays(-1), sampleCount );
+            var result = await SenseApi.GetMonitorHistory(int.Parse(Config["monitor-id"]), Granularity.Minute, DateTime.Now.AddDays(-1), sampleCount );
 
             Assert.IsTrue(result.Totals.Count == sampleCount);
         }
@@ -31,7 +31,7 @@ namespace SenseApiTests
         public async Task GetMonitorHistoryInHours()
         {
             const int sampleCount = 720;
-            var result = await SenseApi.GetMonitorHistory(SenseApi.AuthorizationResponse.Monitors.First().Id, Granularity.Hour, DateTime.Now.AddDays(-30), sampleCount);
+            var result = await SenseApi.GetMonitorHistory(int.Parse(Config["monitor-id"]), Granularity.Hour, DateTime.Now.AddDays(-30), sampleCount);
 
             Assert.IsTrue(result.Totals.Count == sampleCount);
         }
@@ -40,7 +40,7 @@ namespace SenseApiTests
         public async Task GetMonitorHistoryInDays()
         {
             const int sampleCount = 365;
-            var result = await SenseApi.GetMonitorHistory(SenseApi.AuthorizationResponse.Monitors.First().Id, Granularity.Day, DateTime.Now.AddDays(-365), sampleCount);
+            var result = await SenseApi.GetMonitorHistory(int.Parse(Config["monitor-id"]), Granularity.Day, DateTime.Now.AddDays(-365), sampleCount);
 
             Assert.IsTrue(result.Totals.Count == sampleCount);
         }
@@ -51,13 +51,13 @@ namespace SenseApiTests
             const int sampleCount = 86400;
             if (SenseApi.DeviceList == null || SenseApi.DeviceList.Count == 0)
             {
-                await SenseApi.GetDeviceList(SenseApi.AuthorizationResponse.Monitors.First().Id);
+                await SenseApi.GetDeviceList(int.Parse(Config["monitor-id"]));
             }
 
             var rnd = new Random();
             var r = rnd.Next(SenseApi.DeviceList.Count);
 
-            var result = await SenseApi.GetDeviceHistory(SenseApi.AuthorizationResponse.Monitors.First().Id, SenseApi.DeviceList[r].Id, Granularity.Second, DateTime.Now.AddDays(-1), sampleCount);
+            var result = await SenseApi.GetDeviceHistory(int.Parse(Config["monitor-id"]), SenseApi.DeviceList[r].Id, Granularity.Second, DateTime.Now.AddDays(-1), sampleCount);
 
             Assert.IsTrue(result.Totals.Count == sampleCount);
         }
@@ -68,13 +68,13 @@ namespace SenseApiTests
             const int sampleCount = 1440;
             if (SenseApi.DeviceList == null || SenseApi.DeviceList.Count == 0)
             {
-                await SenseApi.GetDeviceList(SenseApi.AuthorizationResponse.Monitors.First().Id);
+                await SenseApi.GetDeviceList(int.Parse(Config["monitor-id"]));
             }
 
             var rnd = new Random();
             var r = rnd.Next(SenseApi.DeviceList.Count);
 
-            var result = await SenseApi.GetDeviceHistory(SenseApi.AuthorizationResponse.Monitors.First().Id, SenseApi.DeviceList[r].Id, Granularity.Minute, DateTime.Now.AddDays(-1), sampleCount);
+            var result = await SenseApi.GetDeviceHistory(int.Parse(Config["monitor-id"]), SenseApi.DeviceList[r].Id, Granularity.Minute, DateTime.Now.AddDays(-1), sampleCount);
 
             Assert.IsTrue(result.Totals.Count == sampleCount);
         }
@@ -85,13 +85,13 @@ namespace SenseApiTests
             const int sampleCount = 720;
             if (SenseApi.DeviceList == null || SenseApi.DeviceList.Count == 0)
             {
-                await SenseApi.GetDeviceList(SenseApi.AuthorizationResponse.Monitors.First().Id);
+                await SenseApi.GetDeviceList(int.Parse(Config["monitor-id"]));
             }
 
             var rnd = new Random();
             var r = rnd.Next(SenseApi.DeviceList.Count);
 
-            var result = await SenseApi.GetDeviceHistory(SenseApi.AuthorizationResponse.Monitors.First().Id, SenseApi.DeviceList[r].Id, Granularity.Hour, DateTime.Now.AddDays(-30), sampleCount);
+            var result = await SenseApi.GetDeviceHistory(int.Parse(Config["monitor-id"]), SenseApi.DeviceList[r].Id, Granularity.Hour, DateTime.Now.AddDays(-30), sampleCount);
 
             Assert.IsTrue(result.Totals.Count == sampleCount);
         }
@@ -102,13 +102,13 @@ namespace SenseApiTests
             const int sampleCount = 365;
             if (SenseApi.DeviceList == null || SenseApi.DeviceList.Count == 0)
             {
-                await SenseApi.GetDeviceList(SenseApi.AuthorizationResponse.Monitors.First().Id);
+                await SenseApi.GetDeviceList(int.Parse(Config["monitor-id"]));
             }
 
             var rnd = new Random();
             var r = rnd.Next(SenseApi.DeviceList.Count);
 
-            var result = await SenseApi.GetDeviceHistory(SenseApi.AuthorizationResponse.Monitors.First().Id, SenseApi.DeviceList[r].Id, Granularity.Day, DateTime.Now.AddDays(-365), sampleCount);
+            var result = await SenseApi.GetDeviceHistory(int.Parse(Config["monitor-id"]), SenseApi.DeviceList[r].Id, Granularity.Day, DateTime.Now.AddDays(-365), sampleCount);
 
             Assert.IsTrue(result.Totals.Count == sampleCount);
         }

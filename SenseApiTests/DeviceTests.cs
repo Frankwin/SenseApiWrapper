@@ -11,7 +11,7 @@ namespace SenseApiTests
         [TestMethod]
         public async Task GetDeviceListTest()
         {
-            var result = await SenseApi.GetDeviceList(SenseApi.AuthorizationResponse.Monitors.First().Id);
+            var result = await SenseApi.GetDeviceList(int.Parse(Config["monitor-id"]));
 
             Assert.IsTrue(result.Count > 0);
         }
@@ -21,13 +21,13 @@ namespace SenseApiTests
         {
             if (SenseApi.DeviceList == null || SenseApi.DeviceList.Count == 0)
             {
-                await SenseApi.GetDeviceList(SenseApi.AuthorizationResponse.Monitors.First().Id);
+                await SenseApi.GetDeviceList(int.Parse(Config["monitor-id"]));
             }
 
             var rnd = new Random();
             var r = rnd.Next(SenseApi.DeviceList.Count);
 
-            var result = await SenseApi.GetDeviceDetails(SenseApi.AuthorizationResponse.Monitors.First().Id, SenseApi.DeviceList[r].Id);
+            var result = await SenseApi.GetDeviceDetails(int.Parse(Config["monitor-id"]), SenseApi.DeviceList[r].Id);
 
             Assert.IsTrue(result.Device.Id == SenseApi.DeviceList[r].Id);
         }
@@ -37,10 +37,10 @@ namespace SenseApiTests
         {
             if (SenseApi.DeviceList == null || SenseApi.DeviceList.Count == 0)
             {
-                await SenseApi.GetDeviceList(SenseApi.AuthorizationResponse.Monitors.First().Id);
+                await SenseApi.GetDeviceList(int.Parse(Config["monitor-id"]));
             }
 
-            var result = await SenseApi.GetAlwaysOnDetails(SenseApi.AuthorizationResponse.Monitors.First().Id);
+            var result = await SenseApi.GetAlwaysOnDetails(int.Parse(Config["monitor-id"]));
 
             Assert.IsTrue(result.Device.Id.Contains("always_on", StringComparison.InvariantCultureIgnoreCase));
         }
@@ -50,10 +50,10 @@ namespace SenseApiTests
         {
             if (SenseApi.DeviceList == null || SenseApi.DeviceList.Count == 0)
             {
-                await SenseApi.GetDeviceList(SenseApi.AuthorizationResponse.Monitors.First().Id);
+                await SenseApi.GetDeviceList(int.Parse(Config["monitor-id"]));
             }
 
-            var result = await SenseApi.GetOtherDetails(SenseApi.AuthorizationResponse.Monitors.First().Id);
+            var result = await SenseApi.GetOtherDetails(int.Parse(Config["monitor-id"]));
 
             Assert.IsTrue(result.Device.Id.Contains("unknown", StringComparison.InvariantCultureIgnoreCase));
         }
@@ -61,8 +61,8 @@ namespace SenseApiTests
         [TestMethod]
         public async Task MakeSureDeviceListGetsUpdatedWithDeviceDetailsTest()
         {
-                await SenseApi.GetDeviceList(SenseApi.AuthorizationResponse.Monitors.First().Id);
-                var deviceDetails = await SenseApi.GetDeviceDetails(SenseApi.AuthorizationResponse.Monitors.First().Id, SenseApi.DeviceList.First().Id);
+                await SenseApi.GetDeviceList(int.Parse(Config["monitor-id"]));
+                var deviceDetails = await SenseApi.GetDeviceDetails(int.Parse(Config["monitor-id"]), SenseApi.DeviceList.First().Id);
 
                 Assert.IsTrue(SenseApi.DeviceList.Find(x => x.Id == deviceDetails.Device.Id).LastState != null);
         }

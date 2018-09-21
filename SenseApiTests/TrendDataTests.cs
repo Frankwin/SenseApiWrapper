@@ -12,7 +12,7 @@ namespace SenseApiTests
         [TestMethod]
         public async Task GetUsageTrendDataForA1HourInterval()
         {
-            var result = await SenseApi.GetUsageTrendData(SenseApi.AuthorizationResponse.Monitors.First().Id, Granularity.Hour, DateTime.Now.AddDays(-1));
+            var result = await SenseApi.GetUsageTrendData(int.Parse(Config["monitor-id"]), Granularity.Hour, DateTime.Now.AddDays(-1));
 
             Assert.IsTrue(result.Steps == 60);
             Assert.IsTrue(result.Scale == "hour");

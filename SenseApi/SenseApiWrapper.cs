@@ -70,6 +70,18 @@ namespace SenseApi
                     var json = await response.Content.ReadAsStringAsync();
 
                     AuthorizationResponse = JsonConvert.DeserializeObject<AuthorizationResponse>(json);
+
+                    // Update AccessToken and Monitor ID in appsettings.json file
+                    var appSettingsJson = File.ReadAllText("appsettings.json");
+                    dynamic jsonObj = JsonConvert.DeserializeObject(appSettingsJson);
+                    jsonObj["accesstoken"] = AuthorizationResponse.AccessToken;
+                    jsonObj["monitor-id"] = AuthorizationResponse.Monitors.First().Id;
+                    string output =
+                        JsonConvert.SerializeObject(jsonObj, Formatting.Indented);
+                    File.WriteAllText("appsettings.json", output);
+
+                    Config.Reload();
+
                     return AuthorizationResponse;
                 }
             }
@@ -85,7 +97,7 @@ namespace SenseApi
         {
             using (var httpClient = new HttpClient())
             {
-                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", AuthorizationResponse.AccessToken);
+                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", Config["accesstoken"]);
 
                 var response = await httpClient.GetAsync($"{apiAddress}/app/monitors/{monitorId}/status");
 
@@ -112,7 +124,7 @@ namespace SenseApi
         {
             using (var httpClient = new HttpClient())
             {
-                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", AuthorizationResponse.AccessToken);
+                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", Config["accesstoken"]);
 
                 var response = await httpClient.GetAsync($"{apiAddress}/app/monitors/{monitorId}/devices");
 
@@ -141,7 +153,7 @@ namespace SenseApi
         {
             using (var httpClient = new HttpClient())
             {
-                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", AuthorizationResponse.AccessToken);
+                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", Config["accesstoken"]);
 
                 var response = await httpClient.GetAsync($"{apiAddress}/app/monitors/{monitorId}/devices/{deviceId}");
 
@@ -181,7 +193,7 @@ namespace SenseApi
 
             using (var httpClient = new HttpClient())
             {
-                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", AuthorizationResponse.AccessToken);
+                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", Config["accesstoken"]);
 
                 var response = await httpClient.GetAsync($"{apiAddress}/app/monitors/{monitorId}/devices/{deviceId}");
 
@@ -221,7 +233,7 @@ namespace SenseApi
 
             using (var httpClient = new HttpClient())
             {
-                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", AuthorizationResponse.AccessToken);
+                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", Config["accesstoken"]);
 
                 var response = await httpClient.GetAsync($"{apiAddress}/app/monitors/{monitorId}/devices/{deviceId}");
 
@@ -261,7 +273,7 @@ namespace SenseApi
         {
             using (var httpClient = new HttpClient())
             {
-                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", AuthorizationResponse.AccessToken);
+                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", Config["accesstoken"]);
 
                 var response = await httpClient.GetAsync(
                     $"{apiAddress}/app/history/usage?monitor_id={monitorId}&granularity={granularity.ToString().ToLowerInvariant()}&start={startDateTime.ToUniversalTime().ToString("yyyy-MM-ddThh:mm:ssZ",CultureInfo.InvariantCulture)}&frames={sampleCount}");
@@ -299,7 +311,7 @@ namespace SenseApi
 
             using (var httpClient = new HttpClient())
             {
-                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", AuthorizationResponse.AccessToken);
+                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", Config["accesstoken"]);
 
                 var response = await httpClient.GetAsync(
                     $"{apiAddress}/app/history/usage?monitor_id={monitorId}&device_id={deviceId}&granularity={granularity.ToString().ToLowerInvariant()}&start={startDateTime.ToUniversalTime().ToString("yyyy-MM-ddThh:mm:ssZ", CultureInfo.InvariantCulture)}&frames={sampleCount}");
@@ -334,7 +346,7 @@ namespace SenseApi
             
             using (var httpClient = new HttpClient())
             {
-                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", AuthorizationResponse.AccessToken);
+                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", Config["accesstoken"]);
 
                 var response = await httpClient.GetAsync($"{apiAddress}/app/history/trends?monitor_id={monitorId}&device_id=usage&scale={granularity.ToString().ToLowerInvariant()}&start={startDateTime.ToUniversalTime().ToString("yyyy-MM-ddThh:mm:ssZ", CultureInfo.InvariantCulture)}");
 
