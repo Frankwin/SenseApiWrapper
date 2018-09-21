@@ -10,7 +10,7 @@ namespace SenseApiTests
         [TestMethod]
         public void SuccessfulAuthenticationTest()
         {
-            Assert.IsTrue(SenseApi.AuthorizationResponse.Authorized);
+            Assert.IsTrue(Config["accesstoken"] != null);
         }
 
         [TestMethod]
@@ -18,12 +18,6 @@ namespace SenseApiTests
         public async Task UnsuccessfulAuthenticationTest()
         {
                 await SenseApi.Authenticate("bob123456@test.com", "WhatIsGoingOn");
-        }
-
-        [TestMethod]
-        public void CheckAuthorizationResponseGetsSetTest()
-        {
-            Assert.IsTrue(SenseApi.AuthorizationResponse != null);
         }
     }
 }
