@@ -37,6 +37,7 @@ namespace SenseApiTests
                 {
                     Config["accesstoken"] = result.AccessToken;
                     Config["monitor-ids"] = string.Join(",", result.Monitors.Select(x => x.Id));
+                    Config["user-id"] = result.UserId.ToString();
                 }
             }
 

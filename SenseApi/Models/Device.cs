@@ -26,7 +26,6 @@ namespace SenseApi.Models
         public string GivenMake { get; set; }
         [JsonProperty("given_model")]
         public string GivenModel { get; set; }
-
         public List<decimal> History { get; set; }
         [JsonProperty("avgw")]
         public decimal AverageWattage { get; set; }

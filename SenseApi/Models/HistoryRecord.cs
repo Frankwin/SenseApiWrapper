@@ -11,7 +11,6 @@ namespace SenseApi.Models
         [JsonProperty("start")]
         public DateTime StartDateTime { get; set; }
         [JsonProperty("endOfData")]
-
         public DateTime EndDateTime { get; set; }
     }
 }

@@ -10,6 +10,7 @@ namespace SenseApi.Models
         public string AlwaysOn { get; set; }
         public List<string> ControlCapabilities { get; set; }
         public DateTime DateCreated { get; set; }
+        public DateTime DateFirstUsage { get; set; }
         public string DefaultLocation { get; set; }
         public string DefaultMake { get; set; }
         public string DefaultUserDeviceType { get; set; }
@@ -20,17 +21,16 @@ namespace SenseApi.Models
         public string ModelCreatedVersion { get; set; }
         [JsonProperty("name_useredit")]
         public bool NameUserEdit { get; set; }
-
         public string OriginalName { get; set; }
         public List<PeerName> PeerNames { get; set; }
         public bool Pending { get; set; }
+        public int PreselectionIndex { get; set; }
         public bool Revoked { get; set; }
         public bool TimelineAllowed { get; set; }
         public bool TimelineDefault { get; set; }
         public string Type { get; set; }
         [JsonProperty("user_editable")]
         public bool UserEditable { get; set; }
-
         public bool UserDeletable { get; set; }
         public string UserDeviceType { get; set; }
         public string UserDeviceTypeDisplayString { get; set; }

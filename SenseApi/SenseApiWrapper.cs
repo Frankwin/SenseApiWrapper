@@ -347,6 +347,31 @@ namespace SenseApi
             }
         }
 
+        /// <summary>
+        /// Get the Timeline Data for a user
+        /// </summary>
+        /// <param name="userId">User ID to get the timeline data for</param>
+        /// <returns>TimelineData object with the serialized json data</returns>
+        public async Task<TimelineData> GetTimelineData(int userId)
+        {
+            using (var httpClient = new HttpClient())
+            {
+                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", Config["accesstoken"]);
+
+                var callData = $"{apiAddress}/users/{userId}/timeline";
+
+                var response = await httpClient.GetAsync(callData);
+
+                await CheckResponseStatus(response, httpClient, callData);
+
+                var json = await response.Content.ReadAsStringAsync();
+
+                var trendData = JsonConvert.DeserializeObject<TimelineData>(json);
+
+                return trendData;
+            }
+        }
+
         #region Private methods
 
         /// <summary>

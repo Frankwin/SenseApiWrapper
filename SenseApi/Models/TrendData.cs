@@ -10,7 +10,6 @@ namespace SenseApi.Models
         public DateTime StartDateTime { get; set; }
         [JsonProperty("end")]
         public DateTime EndDateTime { get; set; }
-
         public ConsumptionData Consumption { get; set; }
         public ProductionData Production { get; set; }
         public string Scale { get; set; }
