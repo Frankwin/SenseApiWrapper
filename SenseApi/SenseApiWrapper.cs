@@ -21,9 +21,11 @@ namespace SenseApi
         public MonitorStatus MonitorStatus { get; set; }
         public List<Device> DeviceList { get; set; }
         public static IConfigurationRoot Config { get; private set; }
-        private readonly string apiAddress;
 
-        public SenseApiWrapper()
+        private readonly string apiAddress;
+        private readonly JsonSerializerSettings serializerSettings;
+
+        public SenseApiWrapper(JsonSerializerSettings serializerSettings = null)
         {
             Config = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
@@ -31,8 +33,19 @@ namespace SenseApi
                 .Build();
 
             apiAddress = Config["api-url"];
+
+            if (serializerSettings == null)
+            {
+                serializerSettings = new JsonSerializerSettings
+                {
+                    NullValueHandling = NullValueHandling.Ignore,
+                    MissingMemberHandling = MissingMemberHandling.Ignore
+                };
+            }
+
+            this.serializerSettings = serializerSettings;
         }
-        
+
         /// <summary>
         /// Authenticate with the Sense API using your email and password
         /// </summary>
@@ -69,15 +82,14 @@ namespace SenseApi
 
                     var json = await response.Content.ReadAsStringAsync();
 
-                    AuthorizationResponse = JsonConvert.DeserializeObject<AuthorizationResponse>(json);
+                    AuthorizationResponse = JsonConvert.DeserializeObject<AuthorizationResponse>(json, serializerSettings);
 
                     // Update AccessToken and Monitor ID in appsettings.json file
                     var appSettingsJson = File.ReadAllText("appsettings.json");
-                    dynamic jsonObj = JsonConvert.DeserializeObject(appSettingsJson);
+                    dynamic jsonObj = JsonConvert.DeserializeObject(appSettingsJson, serializerSettings);
                     jsonObj["accesstoken"] = AuthorizationResponse.AccessToken;
                     jsonObj["monitor-ids"] = string.Join(",", AuthorizationResponse.Monitors.Select(x => x.Id));
-                    string output =
-                        JsonConvert.SerializeObject(jsonObj, Formatting.Indented);
+                    string output = JsonConvert.SerializeObject(jsonObj, Formatting.Indented);
                     File.WriteAllText("appsettings.json", output);
 
                     Config.Reload();
@@ -94,22 +106,11 @@ namespace SenseApi
         /// <returns>Monitor Status Object</returns>
         public async Task<MonitorStatus> GetMonitorStatus(int monitorId)
         {
-            using (var httpClient = new HttpClient())
-            {
-                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", Config["accesstoken"]);
+            var callData = $"{apiAddress}/app/monitors/{monitorId}/status";
 
-                var callData = $"{apiAddress}/app/monitors/{monitorId}/status";
+            MonitorStatus = await ApiCallAsync<MonitorStatus>(callData);
 
-                var response = await httpClient.GetAsync(callData);
-
-                await CheckResponseStatus(response, httpClient, callData);
-
-                var json = await response.Content.ReadAsStringAsync();
-
-                MonitorStatus = JsonConvert.DeserializeObject<MonitorStatus>(json);
-
-                return MonitorStatus;
-            }
+            return MonitorStatus;
         }
 
         /// <summary>
@@ -119,22 +120,11 @@ namespace SenseApi
         /// <returns>List of Devices with some details</returns>
         public async Task<List<Device>> GetDeviceList(int monitorId)
         {
-            using (var httpClient = new HttpClient())
-            {
-                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", Config["accesstoken"]);
+            var callData = $"{apiAddress}/app/monitors/{monitorId}/devices";
 
-                var callData = $"{apiAddress}/app/monitors/{monitorId}/devices";
-                
-                var response = await httpClient.GetAsync(callData);
+            DeviceList = await ApiCallAsync<List<Device>>(callData);
 
-                await CheckResponseStatus(response, httpClient, callData);
-
-                var json = await response.Content.ReadAsStringAsync();
-
-                DeviceList = JsonConvert.DeserializeObject<List<Device>>(json);
-
-                return DeviceList;
-            }
+            return DeviceList;
         }
 
         /// <summary>
@@ -146,32 +136,13 @@ namespace SenseApi
         /// <returns>Device Details for the specified device.</returns>
         public async Task<DeviceDetails> GetDeviceDetails(int monitorId, string deviceId)
         {
-            using (var httpClient = new HttpClient())
-            {
-                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", Config["accesstoken"]);
+            var callData = $"{apiAddress}/app/monitors/{monitorId}/devices/{deviceId}";
 
-                var callData = $"{apiAddress}/app/monitors/{monitorId}/devices/{deviceId}";
+            var deviceDetails = await ApiCallAsync<DeviceDetails>(callData);
 
-                var response = await httpClient.GetAsync(callData);
+            UpdateDeviceList(deviceId, deviceDetails);
 
-                await CheckResponseStatus(response, httpClient, callData);
-
-                var json = await response.Content.ReadAsStringAsync();
-
-                var deviceDetails = JsonConvert.DeserializeObject<DeviceDetails>(json);
-
-                if (DeviceList == null || DeviceList.Count <= 0) return deviceDetails;
-
-                var device = DeviceList.FirstOrDefault(x => x.Id == deviceId);
-                if (device == null) return deviceDetails;
-
-                var pos = DeviceList.FindIndex(x => x.Id == deviceId);
-                DeviceList.RemoveAt(pos);
-                device = deviceDetails.Device;
-                DeviceList.Insert(pos, device);
-
-                return deviceDetails;
-            }
+            return deviceDetails;
         }
 
         /// <summary>
@@ -183,33 +154,13 @@ namespace SenseApi
         public async Task<DeviceDetails> GetAlwaysOnDetails(int monitorId)
         {
             const string deviceId = "always_on";
+            var callData = $"{apiAddress}/app/monitors/{monitorId}/devices/{deviceId}";
 
-            using (var httpClient = new HttpClient())
-            {
-                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", Config["accesstoken"]);
+            var deviceDetails = await ApiCallAsync<DeviceDetails>(callData);
 
-                var callData = $"{apiAddress}/app/monitors/{monitorId}/devices/{deviceId}";
+            UpdateDeviceList(deviceId, deviceDetails);
 
-                var response = await httpClient.GetAsync(callData);
-
-                await CheckResponseStatus(response, httpClient, callData);
-
-                var json = await response.Content.ReadAsStringAsync();
-
-                var deviceDetails = JsonConvert.DeserializeObject<DeviceDetails>(json);
-
-                if (DeviceList == null || DeviceList.Count <= 0) return deviceDetails;
-
-                var device = DeviceList.FirstOrDefault(x => x.Id == deviceId);
-                if (device == null) return deviceDetails;
-
-                var pos = DeviceList.FindIndex(x => x.Id == deviceId);
-                DeviceList.RemoveAt(pos);
-                device = deviceDetails.Device;
-                DeviceList.Insert(pos, device);
-
-                return deviceDetails;
-            }
+            return deviceDetails;
         }
 
         /// <summary>
@@ -221,33 +172,13 @@ namespace SenseApi
         public async Task<DeviceDetails> GetOtherDetails(int monitorId)
         {
             const string deviceId = "unknown";
+            var callData = $"{apiAddress}/app/monitors/{monitorId}/devices/{deviceId}";
 
-            using (var httpClient = new HttpClient())
-            {
-                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", Config["accesstoken"]);
+            var deviceDetails = await ApiCallAsync<DeviceDetails>(callData);
 
-                var callData = $"{apiAddress}/app/monitors/{monitorId}/devices/{deviceId}";
+            UpdateDeviceList(deviceId, deviceDetails);
 
-                var response = await httpClient.GetAsync(callData);
-
-                await CheckResponseStatus(response, httpClient, callData);
-
-                var json = await response.Content.ReadAsStringAsync();
-
-                var deviceDetails = JsonConvert.DeserializeObject<DeviceDetails>(json);
-
-                if (DeviceList == null || DeviceList.Count <= 0) return deviceDetails;
-
-                var device = DeviceList.FirstOrDefault(x => x.Id == deviceId);
-                if (device == null) return deviceDetails;
-
-                var pos = DeviceList.FindIndex(x => x.Id == deviceId);
-                DeviceList.RemoveAt(pos);
-                device = deviceDetails.Device;
-                DeviceList.Insert(pos, device);
-
-                return deviceDetails;
-            }
+            return deviceDetails;
         }
 
         /// <summary>
@@ -260,22 +191,11 @@ namespace SenseApi
         /// <returns>HistoryRecord object with a list sampling values for the monitor in the chosen granularity interval</returns>
         public async Task<HistoryRecord> GetMonitorHistory(int monitorId, Granularity granularity, DateTime startDateTime, int sampleCount)
         {
-            using (var httpClient = new HttpClient())
-            {
-                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", Config["accesstoken"]);
+            var callData = $"{apiAddress}/app/history/usage?monitor_id={monitorId}&granularity={granularity.ToString().ToLowerInvariant()}&start={startDateTime.ToUniversalTime().ToString("yyyy-MM-ddThh:mm:ssZ", CultureInfo.InvariantCulture)}&frames={sampleCount}";
 
-                var callData = $"{apiAddress}/app/history/usage?monitor_id={monitorId}&granularity={granularity.ToString().ToLowerInvariant()}&start={startDateTime.ToUniversalTime().ToString("yyyy-MM-ddThh:mm:ssZ",CultureInfo.InvariantCulture)}&frames={sampleCount}";
+            var history = await ApiCallAsync<HistoryRecord>(callData);
 
-                var response = await httpClient.GetAsync(callData);
-
-                await CheckResponseStatus(response, httpClient, callData);
-
-                var json = await response.Content.ReadAsStringAsync();
-
-                var history = JsonConvert.DeserializeObject<HistoryRecord>(json);
-
-                return history;
-            }
+            return history;
         }
 
         /// <summary>
@@ -289,29 +209,17 @@ namespace SenseApi
         /// <returns>HistoryRecord object with a list sampling values for the monitor in the chosen granularity interval</returns>
         public async Task<HistoryRecord> GetDeviceHistory(int monitorId, string deviceId, Granularity granularity, DateTime startDateTime, int sampleCount)
         {
-            if (granularity != Granularity.Second && granularity != Granularity.Minute && granularity != Granularity.Hour &&
-                granularity != Granularity.Day)
+            if (granularity != Granularity.Second && granularity != Granularity.Minute &&
+                granularity != Granularity.Hour && granularity != Granularity.Day)
             {
                 throw new InvalidEnumArgumentException($"{granularity.ToString()} is not a valid granularity for this call.");
             }
 
-            using (var httpClient = new HttpClient())
-            {
-                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", Config["accesstoken"]);
+            var callData = $"{apiAddress}/app/history/usage?monitor_id={monitorId}&device_id={deviceId}&granularity={granularity.ToString().ToLowerInvariant()}&start={startDateTime.ToUniversalTime().ToString("yyyy-MM-ddThh:mm:ssZ", CultureInfo.InvariantCulture)}&frames={sampleCount}";
 
-                var callData =
-                    $"{apiAddress}/app/history/usage?monitor_id={monitorId}&device_id={deviceId}&granularity={granularity.ToString().ToLowerInvariant()}&start={startDateTime.ToUniversalTime().ToString("yyyy-MM-ddThh:mm:ssZ", CultureInfo.InvariantCulture)}&frames={sampleCount}";
+            var history = await ApiCallAsync<HistoryRecord>(callData);
 
-                var response = await httpClient.GetAsync(callData);
-
-                await CheckResponseStatus(response, httpClient, callData);
-
-                var json = await response.Content.ReadAsStringAsync();
-
-                var history = JsonConvert.DeserializeObject<HistoryRecord>(json);
-
-                return history;
-            }
+            return history;
         }
 
         /// <summary>
@@ -323,28 +231,17 @@ namespace SenseApi
         /// <returns>TrendData object</returns>
         public async Task<TrendData> GetUsageTrendData(int monitorId, Granularity granularity, DateTime startDateTime)
         {
-            if (granularity != Granularity.Hour && granularity != Granularity.Day && granularity != Granularity.Month &&
-                granularity != Granularity.Year)
+            if (granularity != Granularity.Hour && granularity != Granularity.Day &&
+                granularity != Granularity.Month && granularity != Granularity.Year)
             {
                 throw new InvalidEnumArgumentException($"{granularity.ToString()} is not a valid granularity for this call.");
             }
-            
-            using (var httpClient = new HttpClient())
-            {
-                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", Config["accesstoken"]);
 
-                var callData = $"{apiAddress}/app/history/trends?monitor_id={monitorId}&device_id=usage&scale={granularity.ToString().ToLowerInvariant()}&start={startDateTime.ToUniversalTime().ToString("yyyy-MM-ddThh:mm:ssZ", CultureInfo.InvariantCulture)}";
+            var callData = $"{apiAddress}/app/history/trends?monitor_id={monitorId}&device_id=usage&scale={granularity.ToString().ToLowerInvariant()}&start={startDateTime.ToUniversalTime().ToString("yyyy-MM-ddThh:mm:ssZ", CultureInfo.InvariantCulture)}";
 
-                var response = await httpClient.GetAsync(callData);
+            var trendData = await ApiCallAsync<TrendData>(callData);
 
-                await CheckResponseStatus(response, httpClient, callData);
-
-                var json = await response.Content.ReadAsStringAsync();
-
-                var trendData = JsonConvert.DeserializeObject<TrendData>(json);
-
-                return trendData;
-            }
+            return trendData;
         }
 
         /// <summary>
@@ -354,11 +251,46 @@ namespace SenseApi
         /// <returns>TimelineData object with the serialized json data</returns>
         public async Task<TimelineData> GetTimelineData(int userId)
         {
+            var callData = $"{apiAddress}/users/{userId}/timeline";
+
+            var timelineData = await ApiCallAsync<TimelineData>(callData);
+
+            return timelineData;
+        }
+
+        #region Private methods
+
+        /// <summary>
+        /// If a DeviceList is present this list is also updated with the additional details.
+        /// </summary>
+        /// <param name="deviceId">Device ID of the device</param>
+        /// <param name="deviceDetails">Device Details for the specified device.</param>
+        private void UpdateDeviceList(string deviceId, DeviceDetails deviceDetails)
+        {
+            if (DeviceList != null && DeviceList.Count > 0)
+            {
+                var device = DeviceList.FirstOrDefault(x => x.Id == deviceId);
+                if (device != null)
+                {
+                    var pos = DeviceList.FindIndex(x => x.Id == deviceId);
+                    DeviceList.RemoveAt(pos);
+                    device = deviceDetails.Device;
+                    DeviceList.Insert(pos, device);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Perform a call to the Sense API
+        /// </summary>
+        /// <typeparam name="TR">The type of object that is returned</typeparam>
+        /// <param name="callData">The detailed call data of the API</param>
+        /// <returns>An instance of TR from the API call.</returns>
+        private async Task<TR> ApiCallAsync<TR>(string callData)
+        {
             using (var httpClient = new HttpClient())
             {
                 httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", Config["accesstoken"]);
-
-                var callData = $"{apiAddress}/users/{userId}/timeline";
 
                 var response = await httpClient.GetAsync(callData);
 
@@ -366,13 +298,12 @@ namespace SenseApi
 
                 var json = await response.Content.ReadAsStringAsync();
 
-                var trendData = JsonConvert.DeserializeObject<TimelineData>(json);
+                var result = JsonConvert.DeserializeObject<TR>(json, serializerSettings);
 
-                return trendData;
+                return result;
             }
-        }
 
-        #region Private methods
+        }
 
         /// <summary>
         /// Check the response status of the Http Call and if we get an Unauthorized response try
